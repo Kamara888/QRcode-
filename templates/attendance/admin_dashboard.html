@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="brand">
+            <h5><i class="bi bi-qr-code"></i> QR Attendance</h5>
+            <small>Administrator Panel</small>
+        </div>
+        <div class="nav-section">Main</div>
+        <a href="{% url 'admin-dashboard' %}" class="nav-item active">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a href="{% url 'admin-user-list' %}" class="nav-item">
+            <i class="bi bi-people"></i> Users
+        </a>
+        <div class="nav-section">Management</div>
+        <a href="{% url 'admin-create-user' %}?role=student" class="nav-item">
+            <i class="bi bi-person-plus"></i> Add Student
+        </a>
+        <a href="{% url 'admin-create-user' %}?role=lecturer" class="nav-item">
+            <i class="bi bi-person-plus"></i> Add Lecturer
+        </a>
+        <a href="/admin/courses/course/" class="nav-item">
+            <i class="bi bi-book"></i> Courses
+        </a>
+        <a href="/admin/courses/department/" class="nav-item">
+            <i class="bi bi-building"></i> Departments
+        </a>
+        <div class="nav-section">System</div>
+        <a href="/admin/" class="nav-item">
+            <i class="bi bi-database"></i> Database
+        </a>
+        <a href="{% url 'logout' %}" class="nav-item">
+            <i class="bi bi-box-arrow-left"></i> Logout
+        </a>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-topbar">
+            <div class="greeting">
+                <h2>👋 Good {{ greeting }}, {{ request.user.first_name|default:'Admin' }}</h2>
+                <p><i class="bi bi-calendar3"></i> {{ today }} &middot; <span id="liveClock"></span></p>
+            </div>
+            <div class="user-info">
+                <span class="text-muted small">{{ request.user.email }}</span>
+                <div class="avatar">{{ request.user.first_name|first|default:'A' }}{{ request.user.last_name|first }}</div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-2 col-lg-4 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-mortarboard"></i></div>
+                    <div class="stat-number">{{ total_students }}</div>
+                    <p class="stat-label">Students</p>
+                    <div class="stat-trend up"><i class="bi bi-arrow-up"></i> Active</div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-4 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#f0fdf4;color:#22c55e;"><i class="bi bi-person-workspace"></i></div>
+                    <div class="stat-number">{{ total_lecturers }}</div>
+                    <p class="stat-label">Lecturers</p>
+                    <div class="stat-trend flat"><i class="bi bi-dash"></i> Staff</div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-4 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fffbeb;color:#f59e0b;"><i class="bi bi-journal-bookmark"></i></div>
+                    <div class="stat-number">{{ total_courses }}</div>
+                    <p class="stat-label">Courses</p>
+                    <div class="stat-trend up"><i class="bi bi-arrow-up"></i> Active</div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-4 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fef2f2;color:#ef4444;"><i class="bi bi-clock"></i></div>
+                    <div class="stat-number">{{ total_sessions }}</div>
+                    <p class="stat-label">Sessions</p>
+                    <div class="stat-trend up"><i class="bi bi-arrow-up"></i> Classes</div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-4 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#f5f3ff;color:#8b5cf6;"><i class="bi bi-check-circle"></i></div>
+                    <div class="stat-number">{{ total_records }}</div>
+                    <p class="stat-label">Attendance Records</p>
+                    <div class="stat-trend up"><i class="bi bi-arrow-up"></i> Logged</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="card-dashboard">
+                    <div class="card-header">
+                        <i class="bi bi-lightning text-warning"></i> Quick Actions
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a href="{% url 'admin-create-user' %}?role=student" class="action-btn">
+                                    <div class="action-icon" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-mortarboard"></i></div>
+                                    <div class="action-text">
+                                        <strong>Add Student</strong>
+                                        <small>Create a new student account</small>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'admin-create-user' %}?role=lecturer" class="action-btn">
+                                    <div class="action-icon" style="background:#f0fdf4;color:#22c55e;"><i class="bi bi-person-workspace"></i></div>
+                                    <div class="action-text">
+                                        <strong>Add Lecturer</strong>
+                                        <small>Create a new lecturer account</small>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="/admin/courses/course/" class="action-btn">
+                                    <div class="action-icon" style="background:#fffbeb;color:#f59e0b;"><i class="bi bi-book"></i></div>
+                                    <div class="action-text">
+                                        <strong>Manage Courses</strong>
+                                        <small>Add or edit courses and enrollments</small>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="/admin/courses/department/" class="action-btn">
+                                    <div class="action-icon" style="background:#fef2f2;color:#ef4444;"><i class="bi bi-building"></i></div>
+                                    <div class="action-text">
+                                        <strong>Departments</strong>
+                                        <small>Manage faculties and departments</small>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'admin-user-list' %}" class="action-btn">
+                                    <div class="action-icon" style="background:#f5f3ff;color:#8b5cf6;"><i class="bi bi-people"></i></div>
+                                    <div class="action-text">
+                                        <strong>All Users</strong>
+                                        <small>View, search, filter all user accounts</small>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="/admin/" class="action-btn">
+                                    <div class="action-icon" style="background:#e0f2fe;color:#0284c7;"><i class="bi bi-sliders"></i></div>
+                                    <div class="action-text">
+                                        <strong>System Settings</strong>
+                                        <small>Database admin and configuration</small>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card-dashboard">
+                    <div class="card-header">
+                        <i class="bi bi-pie-chart text-primary"></i> Attendance Overview
+                    </div>
+                    <div class="card-body">
+                        <div style="height:220px;">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                        <div class="row text-center mt-3 g-0">
+                            <div class="col-4">
+                                <span class="badge bg-success d-block p-2">Present</span>
+                                <small class="text-muted" id="presentCount">—</small>
+                            </div>
+                            <div class="col-4">
+                                <span class="badge bg-warning text-dark d-block p-2">Late</span>
+                                <small class="text-muted" id="lateCount">—</small>
+                            </div>
+                            <div class="col-4">
+                                <span class="badge bg-danger d-block p-2">Absent</span>
+                                <small class="text-muted" id="absentCount">—</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card-dashboard">
+                    <div class="card-header">
+                        <i class="bi bi-person-plus"></i> Recently Joined
+                        <a href="{% url 'admin-user-list' %}" class="ms-auto text-muted small">View all</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in recent_users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-sm" style="background:
+                                                {% if u.role == 'admin' %}#ef4444
+                                                {% elif u.role == 'lecturer' %}#22c55e
+                                                {% else %}#3b82f6{% endif %};">
+                                                {{ u.first_name|first|default:u.username|first|upper }}
+                                            </div>
+                                            <div>
+                                                <strong class="small">{{ u.get_full_name|default:u.username }}</strong>
+                                                <div class="text-muted" style="font-size:11px;">@{{ u.username }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if u.role == 'admin' %}danger{% elif u.role == 'lecturer' %}success{% else %}primary{% endif %} bg-opacity-10 text-{% if u.role == 'admin' %}danger{% elif u.role == 'lecturer' %}success{% else %}primary{% endif %}">
+                                            {{ u.role }}
+                                        </span>
+                                    </td>
+                                    <td><small class="text-muted">{{ u.date_joined|timesince }} ago</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center text-muted py-4">No users yet</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card-dashboard">
+                    <div class="card-header">
+                        <i class="bi bi-activity text-success"></i> Recent Activity
+                        <span class="ms-auto badge bg-success bg-opacity-10 text-success">Live</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:#22c55e;"></div>
+                            <div>
+                                <strong class="small">Attendance session started</strong>
+                                <div class="text-muted" style="font-size:12px;">New session created by a lecturer</div>
+                                <small class="text-muted">Just now</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:#3b82f6;"></div>
+                            <div>
+                                <strong class="small">Student scanned QR</strong>
+                                <div class="text-muted" style="font-size:12px;">Attendance recorded for a course</div>
+                                <small class="text-muted">Minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:#f59e0b;"></div>
+                            <div>
+                                <strong class="small">System healthy</strong>
+                                <div class="text-muted" style="font-size:12px;">All services running normally</div>
+                                <small class="text-muted">1 hour ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateClock() {
+    const now = new Date();
+    document.getElementById('liveClock').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+fetch('/api/reports/dashboard/')
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('presentCount').textContent = d.present || 0;
+        document.getElementById('lateCount').textContent = d.late || 0;
+        document.getElementById('absentCount').textContent = d.absent || 0;
+
+        new Chart(document.getElementById('attendanceChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Late', 'Absent'],
+                datasets: [{
+                    data: [d.present || 1, d.late || 0, d.absent || 0],
+                    backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const total = ctx.dataset.data.reduce((a,b) => a + b, 0);
+                                const pct = total ? Math.round(ctx.parsed / total * 100) : 0;
+                                return ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(() => {
+        document.querySelector('.card-dashboard .card-body .row').innerHTML = `
+            <div class="col-12 text-center text-muted py-4">
+                <i class="bi bi-bar-chart" style="font-size:2rem;"></i>
+                <p class="mt-2">Loading chart data...</p>
+            </div>
+        `;
+    });
+</script>
+{% endblock %}

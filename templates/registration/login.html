@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Login - QR Attendance{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4><i class="bi bi-qr-code"></i> QR Attendance</h4>
+                <p class="mb-0">Sign in to your account</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <div class="mt-4 p-3 bg-light rounded">
+                    <small class="text-muted fw-bold">Demo Credentials</small>
+                    <div class="mt-2 small">
+                        <div><span class="badge bg-danger">admin</span> admin / password123</div>
+                        <div><span class="badge bg-success">lecturer</span> lecturer1 / password123</div>
+                        <div><span class="badge bg-info text-dark">student</span> student1 / password123</div>
+                    </div>
+                </div>
+                {% if form.errors %}
+                    <div class="alert alert-danger mt-3">
+                        Invalid username or password.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

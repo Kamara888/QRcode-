@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}QR Code - {{ session.course.code }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4><i class="bi bi-qr-code"></i> Attendance QR Code</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted">
+                    <strong>{{ session.course.code }}</strong> - {{ session.course.name }}
+                </p>
+                <p>Started: {{ session.start_time|time:"H:i" }}</p>
+                <div id="qrContainer" class="my-4">
+                    <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
+                </div>
+                <div id="timer" class="mb-3">
+                    <span class="badge bg-warning text-dark fs-6" id="countdown">05:00</span>
+                    <p class="text-muted mt-2"><small>QR refreshes in <span id="seconds">30</span>s</small></p>
+                </div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Students: Open the mobile app and scan this QR code to mark attendance.
+                </div>
+                <div class="mt-3">
+                    <p>Scanned: <strong>{{ scanned_count }}</strong> / {{ enrolled_count }} students</p>
+                    <div class="progress">
+                        {% if enrolled_count > 0 %}
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 style="width: {% widthratio scanned_count enrolled_count 100 %}%">
+                                {% widthratio scanned_count enrolled_count 100 %}%
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <form method="post" action="{% url 'session-end' session.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-stop-circle"></i> End Session
+                    </button>
+                </form>
+                <a href="{% url 'lecturer-dashboard' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Live Attendance</h5>
+                <a href="{% url 'session-export-xlsx' session.id %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-file-earmark-excel"></i> Export Excel
+                </a>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTable">
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.student.get_full_name|default:record.student.username }}</td>
+                            <td>{{ record.scan_time|time:"H:i:s" }}</td>
+                            <td>
+                                {% if record.status == 'present' %}
+                                    <span class="badge bg-success">Present</span>
+                                {% elif record.status == 'late' %}
+                                    <span class="badge bg-warning text-dark">Late</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No students scanned yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let seconds = 30;
+    let countdownMinutes = {{ session.duration_minutes }};
+    let countdownSeconds = countdownMinutes * 60;
+
+    setInterval(function() {
+        seconds--;
+        if (seconds <= 0) {
+            seconds = 30;
+            location.reload();
+        }
+        document.getElementById('seconds').textContent = seconds;
+    }, 1000);
+
+    setInterval(function() {
+        countdownSeconds--;
+        if (countdownSeconds <= 0) {
+            document.getElementById('countdown').textContent = '00:00';
+            document.getElementById('countdown').className = 'badge bg-danger fs-6';
+        } else {
+            const m = Math.floor(countdownSeconds / 60);
+            const s = countdownSeconds % 60;
+            document.getElementById('countdown').textContent = 
+                String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+    }, 1000);
+
+    setInterval(function() {
+        fetch(window.location.href)
+            .then(r => r.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTable = doc.getElementById('attendanceTable');
+                if (newTable) {
+                    document.getElementById('attendanceTable').innerHTML = newTable.innerHTML;
+                }
+                const newProgress = doc.querySelector('.progress');
+                if (newProgress) {
+                    document.querySelector('.progress').innerHTML = newProgress.innerHTML;
+                }
+            });
+    }, 5000);
+</script>
+{% endblock %}

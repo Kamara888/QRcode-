@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Delete User{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white text-center">
+                <h5><i class="bi bi-exclamation-triangle"></i> Confirm Deletion</h5>
+            </div>
+            <div class="card-body text-center p-4">
+                <p class="mb-1">Are you sure you want to delete this user?</p>
+                <p class="fw-bold fs-5 mb-3">{{ target.get_full_name|default:target.username }}</p>
+                <p class="text-muted small">
+                    Username: <strong>{{ target.username }}</strong><br>
+                    Role: <strong>{{ target.role }}</strong><br>
+                    Email: {{ target.email|default:'—' }}
+                </p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i> This action cannot be undone.
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-trash"></i> Yes, Delete User
+                    </button>
+                </form>
+                <a href="{% url 'admin-user-list' %}" class="btn btn-outline-secondary w-100 mt-2">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
